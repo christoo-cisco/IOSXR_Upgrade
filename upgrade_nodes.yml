@@ -1,0 +1,172 @@
+---
+- name: Pre-Tasks
+  hosts: localhost
+  connection: local
+  gather_facts: no
+
+  tasks:
+    - name: Message to room
+      community.general.cisco_webex:
+        recipient_type: '{{wx_recipient_type}}'
+        recipient_id: '{{wx_recipient_id}}'
+        msg_type: '{{wx_msg_type}}'
+        personal_token: '{{wx_personal_token}}'
+        msg: Starting Upgrade of Lab Routers
+
+    - name: Remove old DHCP configuration
+      file: 
+        path: '{{playbook_dir}}/compiled/DHCP/'
+        state: absent
+
+    - name: Create empty DHCP directory
+      file: 
+        path: '{{playbook_dir}}/compiled/DHCP/'
+        state: directory
+
+    - name: Create Blank version file
+      file:
+        path: '{{playbook_dir}}/compiled/DHCP/version.input'
+        state: touch
+
+- name: Prepair Infrastructure
+  hosts: all
+  connection: network_cli
+  gather_facts: no
+
+  tasks:
+    - name: Backup device configuration
+      iosxr_command:
+        commands:
+          - show running-config | file {{tftp_path}}{{inventory_hostname}}.config vrf {{tftp_vrf}}
+
+    - name: Write dhcpd.conf for each device
+      template: 
+        src: '{{playbook_dir}}/library/dhcpd.conf.j2'
+        dest: '{{playbook_dir}}/compiled/DHCP/{{inventory_hostname}}.out'
+
+- name: Build DHCP Config input
+  hosts: localhost
+  connection: local
+  gather_facts: no
+
+  tasks:
+    - name: Assemble dhcpd.conf input
+      assemble:
+        src: '{{playbook_dir}}/compiled/DHCP/'
+        dest: '{{playbook_dir}}/compiled/DHCP/dhcpd.conf.input'
+
+- name: Update DHCP Configuration on DHCP Server
+  hosts: DHCP_Servers
+  become: yes
+  gather_facts: no
+
+  tasks:
+    - name: Update dhcpd.conf file
+      blockinfile:
+        block: "{{lookup('ansible.builtin.file' , '{{playbook_dir}}/compiled/DHCP/dhcpd.conf.input') }}"
+        path: '{{dhcpd_path}}'
+        marker: "# {mark} ANSIBLE MANAGED BLOCK"
+
+    - name: Restart DHCP deamon
+      command: /etc/init.d/isc-dhcp-server  restart
+
+- name: Start Software Upgrade
+  hosts: all
+  connection: network_cli
+  gather_facts: no
+  
+  tasks:
+    - name: Get Current version information
+      napalm_get_facts:
+        hostname: '{{ansible_host}}'
+        username: '{{ansible_user}}'
+        dev_os: '{{napalm_driver}}'
+        password: '{{ansible_password}}'
+        filter: facts
+
+    - name: Message to room Upgrade
+      when:
+        - napalm_os_version != sw_ver
+      community.general.cisco_webex:
+        recipient_type: '{{wx_recipient_type}}'
+        recipient_id: '{{wx_recipient_id}}'
+        msg_type: '{{wx_msg_type}}'
+        personal_token: '{{wx_personal_token}}'
+        msg: '{{inventory_hostname}} is runing {{napalm_os_version}} and will be upgraded to {{sw_ver}}'
+
+    - name: Message to room No Upgrade
+      when:
+        - napalm_os_version == sw_ver
+      community.general.cisco_webex:
+        recipient_type: '{{wx_recipient_type}}'
+        recipient_id: '{{wx_recipient_id}}'
+        msg_type: '{{wx_msg_type}}'
+        personal_token: '{{wx_personal_token}}'
+        msg: '{{inventory_hostname}} is runing {{napalm_os_version}} and will not be upgraded'
+
+    - name: Reboot XR7 node and start iPXE
+      when: 
+        - xr_7
+        - napalm_os_version != sw_ver
+      iosxr_command:
+        commands:
+          - reload bootmedia network location all noprompt
+
+    - name: Reboot eXR node and start iPXE
+      when: 
+        - xr_7 != true
+        - napalm_os_version != sw_ver
+      ignore_errors: true
+      iosxr_command:
+        commands: 
+          - {command: admin hw-module location all bootmedia network reload, prompt: reload?, answer: 'yes'}
+
+- name: Verify the Software Version
+  hosts: all
+  connection: network_cli
+  gather_facts: no
+
+  tasks:
+    - name: Wait for device to become available
+      wait_for_connection:
+        sleep: 30
+        timeout: 20000
+
+    - name: Get version information
+      napalm_get_facts:
+        hostname: '{{ansible_host}}'
+        username: '{{ansible_user}}'
+        dev_os: '{{napalm_driver}}'
+        password: '{{ansible_password}}'
+        filter: facts
+
+    - name: Display result
+      debug:
+        msg: '{{inventory_hostname}} is running {{napalm_os_version}}'
+
+    - name: Write Version Number
+      lineinfile:
+        path: '{{playbook_dir}}/compiled/DHCP/version.input'
+        line: '{{inventory_hostname}} is now runing {{napalm_os_version}}'
+
+- name: Final Tasks
+  hosts: localhost
+  connection: local
+  gather_facts: no
+
+  tasks:
+    - name: Message to room
+      community.general.cisco_webex:
+        recipient_type: '{{wx_recipient_type}}'
+        recipient_id: '{{wx_recipient_id}}'
+        msg_type: '{{wx_msg_type}}'
+        personal_token: '{{wx_personal_token}}'
+        msg: "{{lookup('ansible.builtin.file' , '{{playbook_dir}}/compiled/DHCP/version.input') }}"
+
+    - name: Message to room
+      community.general.cisco_webex:
+        recipient_type: '{{wx_recipient_type}}'
+        recipient_id: '{{wx_recipient_id}}'
+        msg_type: '{{wx_msg_type}}'
+        personal_token: '{{wx_personal_token}}'
+        msg: Upgrade of Lab Routers Completed

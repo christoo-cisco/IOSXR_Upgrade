@@ -1,0 +1,21 @@
+---
+# Required input for Ansible and NAPALM
+ansible_network_os: cisco.iosxr.iosxr
+napalm_driver: iosxr_netconf
+
+# Webex Intigration
+wx_recipient_type: roomId
+wx_recipient_id: # Webex Copied room ID #
+wx_msg_type: text
+wx_personal_token: # Webex Copied Bot token #
+
+# ISC DHCP server 
+dhcpd_path: # path to dhcpd.conf file (typicaly /etc/dhcp/dhcpd.conf)
+
+# tftp server for device configuration backup
+tftp_path: # TFTP server path (eg. tftp://x.x.x.x/configs/) #
+tftp_vrf: # vrf name used to reach tftp server #
+
+# http server information for PXE and ZTP
+PXE_path: # http server path use by PXE to download image (eg. http://x.x.x.x/repo/) #
+ZTP_path: # http server path used by ZTP to download configuration (eg. http://x.x.x.x/repo/configs/). Should be the same directory tftp backed up to. #

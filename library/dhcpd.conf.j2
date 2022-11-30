@@ -1,0 +1,8 @@
+host {{inventory_hostname}} {
+ hardware ethernet {{management_mac}};
+  if exists user-class and option user-class = "iPXE" {
+     filename = "{{PXE_path}}{{sw_ver}}/{{image_name}}{{sw_ver}}.iso";
+  } else if exists user-class and option user-class ="xr-config" {
+     option bootfile-name "{{ZTP_path}}{{inventory_hostname}}.config";
+  }
+}

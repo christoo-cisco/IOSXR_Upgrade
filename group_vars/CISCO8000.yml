@@ -1,0 +1,4 @@
+---
+xr_7: True
+sw_ver: # Software Version to install (eg. 7.7.2) #
+image_name: 8000-x64-

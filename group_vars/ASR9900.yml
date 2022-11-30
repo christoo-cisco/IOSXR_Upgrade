@@ -1,0 +1,4 @@
+---
+xr_7: False
+sw_ver: # Software Version to install (eg. 7.7.2) #
+image_name: asr9k-golden-x-

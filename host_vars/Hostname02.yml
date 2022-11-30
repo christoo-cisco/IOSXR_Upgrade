@@ -1,0 +1,2 @@
+---
+management_mac: #PXE and ZTP interface MAC, typicaly Mgmt (format 00:00:00:00:00:00)#
