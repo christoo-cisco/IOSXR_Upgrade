@@ -10,7 +10,7 @@ The upgrade process installs an xr7 base .iso or and xr7/eXR Golden ISO (GISO). 
 Installation has been developed and tested using Ubuntu 20.04 and python 3.8.
 Clone the repository and optionally create a virtual environment.
 ```
-hostname:~/some/directory$ git clone ## Path ##
+hostname:~/some/directory$ git clone https://github.com/christoo-cisco/IOSXR_Upgrade.git
 hostname:~/some/directory$ cd lab_upgrade
 hostname:~/some/directory/lab_upgrade$ 
 
