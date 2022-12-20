@@ -58,3 +58,5 @@ Now add the Bot to a Webex space.
 Copy the space link and paste it into the [all.yml](all.yml) file wx_recipient_id variable removing everything except the number sting after the "space=".
 
 ![Copy the Link.](./images/link.png)
+
+[![published](https://static.production.devnetcloud.com/codeexchange/assets/images/devnet-published.svg)](https://developer.cisco.com/codeexchange/github/repo/christoo-cisco/IOSXR_Upgrade)
