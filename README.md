@@ -29,6 +29,12 @@ There are several files and variables that will need to be edited for your envir
 - [ ] Next update the [all.yml](all.yml) to include all the appropriate information for your environment. If using Webex integration see below for bot creation instructions.
 - [ ] Finaly build a GROUP.yml file for each device type group you created in the [hosts.yml](hosts.yml) file.
 
+Also, the dhcpd.conf file on the ISC DHCP server will need to updated to include a Ansible configuration block indicating the section of the file Ansible will modify.
+
+```
+# BEGIN ANSIBLE MANAGED BLOCK
+# END ANSIBLE MANAGED BLOCK
+```
 ## Usage
 ```
 (env_name) hostname:~/some/directory/lab_upgrade$ ansible-playbook -i hosts.yml upgrade_nodes.yml
